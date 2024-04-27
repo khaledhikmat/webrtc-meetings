@@ -1,0 +1,37 @@
+<div class="card" id="meetings-table">
+    <div class="card-header">
+        Meetings
+    </div>
+    <div class="card-body">
+        <p class="small text-danger">{{ .Error }}</p>
+        <form hx-post="actions/publish" hx-indicator="#spinner">
+            <button type="submit" class="btn btn-primary">
+                <span class="spinner-border spinner-border-sm htmx-indicator" id="spinner" role="status" aria-hidden="true">
+                </span>
+                new meeting
+            </button>            
+        </form>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <td>ID</td>
+                    <td>NAME</td>
+                    <td class="text-center">PARTICIPANTS</td>
+                    <td class="text-center">DURATION</td>
+                    <td class="text-center">ACTIVE</td>
+                    <td></td>
+                </tr>
+            </thead>
+            <tbody id="meetings-list">
+                {{ template "meetings-list.html" . }}
+            </tbody>
+        </table>
+        <form hx-get="actions/load-more-meetings?t=now" hx-target="#meetings-list" hx-awap="beforeend" hx-indicator="#spinner">
+            <button type="submit" class="btn btn-primary">
+                <span class="spinner-border spinner-border-sm htmx-indicator" id="spinner" role="status" aria-hidden="true">
+                </span>
+                load more
+            </button>            
+        </form>
+    </div>
+</div>

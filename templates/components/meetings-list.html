@@ -1,0 +1,27 @@
+{{ range .Meetings }}
+<tr>
+    <td>{{ .ID }}</td>
+    <td>{{ .Name }}</td>
+    <td class="text-center">{{ .Participants }}</td>
+    <td class="text-center">{{ .Duration }}</td>
+    <td class="text-center">{{ .Active }}</td>
+    <td>
+        <button
+            hx-get="/meeting?id={{ .ID }}&t=participant"
+            hx-target="#modals-here"
+            hx-trigger="click"
+            class="btn btn-success btn-sm"
+            _="on htmx:afterOnLoad wait 10ms then .show to #modal then add .show to #modal-backdrop">
+            participate
+        </button>
+        <button
+            hx-get="/meeting?id={{ .ID }}&t=sharer"
+            hx-target="#modals-here"
+            hx-trigger="click"
+            class="btn btn-success btn-sm"
+            _="on htmx:afterOnLoad wait 10ms then .show to #modal then add .show to #modal-backdrop">
+            share
+        </button>
+    </td>
+</tr>
+{{ end }}

@@ -1,0 +1,98 @@
+<div id="modal-backdrop" class="modal-backdrop fade show" style="display:block;"></div>
+<div id="modal" class="modal fade show" tabindex="-1" style="display:block;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ .Meeting.Name }}</h5>
+            </div>
+            <div id="pledge-content" class="modal-body">
+                Video
+                <br />
+                <video class="cl_video" id="id_video" width="320" height="240" autoplay muted ></video>
+                <button type="button" class="btn btn-secondary" onclick="init('{{ .Meeting.ID }}', '{{ .Meeting.Name }}')">share</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const userName = "User-"+Math.floor(Math.random() * 100000)
+
+let mediaConstraints = {
+    audio: false, // We dont want an audio track for now
+    video: true // ...and we want a video track
+}
+
+let peerConfiguration = {
+    iceServers:[
+        {
+            urls:[
+              'stun:stun.l.google.com:19302',
+              'stun:stun1.l.google.com:19302'
+            ]
+        }
+    ]
+}
+
+async function init(meetingId, meetingName) {
+    const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+    document.getElementById("id_video").srcObject = stream;
+
+    const peer = createPeer(meetingId, meetingName);
+    stream.getTracks().forEach(track => peer.addTrack(track, stream));
+}
+
+function createPeer(meetingId, meetingName) {
+    const peer = new RTCPeerConnection(peerConfiguration);
+
+    // Attach peer events
+    peer.onnegotiationneeded = (e) => handleNegotiationNeededEvent(e, peer, meetingId, meetingName);
+    peer.onicecandidate = (e) => handleIceCandidateEvent(e, peer, meetingId, meetingName)
+    peer.oniceconnectionstatechange = (e) => handleIceConnectionStateChangeEvent(e);
+
+    return peer;
+}
+
+async function handleNegotiationNeededEvent(e, peer, meetingId, meetingName) {
+    console.log('handleNegotiationNeededEvent', e)
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+
+    // Do not let this request an answer....waint until we receive an ICE candidate event without a candidate
+    // https://github.com/pion/webrtc/issues/78
+    // It seems webrtc pion checks the request...if it doesn't have any candidates, it is going to not allow any inbound traffic.
+    // The trick therefore is to update the requestor to only send the SDP after `onicecandidate` emits a null candidate. 
+}
+
+async function handleIceCandidateEvent(e, peer, meetingId, meetingName) {
+    console.log('handleIceCandidateEvent', e)
+    // Please see above
+    if (e.candidate === null) {
+        let offerRequest = {
+            meetingId: meetingId,
+            name: meetingName,
+            Username: userName,
+            SD: peer.localDescription
+        }
+        const offerAnswer = await fetch("/api/share", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON .stringify(offerRequest) 
+        }).then(r => r.json())
+        console.log("handleIceCandidateEvent - offerAnswer: ", offerAnswer)
+        console.log("handleIceCandidateEvent - offerAnswer sd: ", offerAnswer.sd)
+        console.log("handleIceCandidateEvent - offerAnswer error: ", offerAnswer.error)
+
+        const desc = new RTCSessionDescription(offerAnswer.sd);
+        peer.setRemoteDescription(desc).catch(e => console.log(e));
+    }
+}
+
+async function handleIceConnectionStateChangeEvent(e, peer) {
+    console.log('handleIceConnectionStateChangeEvent', e)
+}
+</script>

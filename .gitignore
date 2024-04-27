@@ -1,0 +1,8 @@
+**/.vs
+**/.idea
+**/.dapr
+**/dist
+**/build
+**/.DS_Store
+**/.env
+**/secrets.json

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {{ template "meta.html" . }}
+        <title>Home</title>
+    </head>
+    <script>
+        function closeModal() {
+            var container = document.getElementById("modals-here")
+            var backdrop = document.getElementById("modal-backdrop")
+            var modal = document.getElementById("modal")
+
+            modal.classList.remove("show")
+            backdrop.classList.remove("show")
+
+            setTimeout(function() {
+                container.removeChild(backdrop)
+                container.removeChild(modal)
+            }, 200)
+        }
+    </script>
+    <body>
+        <div class="container">
+            {{ template "navbar.html" . }}
+            <div class="row mt-4 g-4">
+                <div class="col-12">
+                    <p>WEBRTC to provide peer-to-peer connectivity.</p>
+                    {{template "meetings-table.html" .}}
+                </div>
+            </div>
+        </div>
+        <div id="modals-here"></div>
+    </body>
+</html>
